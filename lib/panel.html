@@ -116,11 +116,20 @@
 
   <section class="card">
     <div class="card-head">
-      <h2>档位定义</h2>
-      <span class="hint">勾上=保留 · 取消=裁掉 · full 固定不限</span>
-      <span class="grow"></span>
+      <h2>档位定义 · 工具名单</h2>
+      <span class="hint">一个档位就是一份工具白名单：勾上的工具在套用它的会话里可见，没勾的会被裁掉</span>
+    </div>
+    <div class="card-head" style="margin-bottom:6px">
       <select id="profilePick"></select>
-      <button class="primary" id="btnSaveProfile">保存这份档位</button>
+      <span class="hint" id="profileSummary"></span>
+      <span class="grow"></span>
+      <button class="primary" id="btnSaveProfile">保存这份工具名单</button>
+      <button class="danger" id="btnDeleteProfile">删除档位</button>
+    </div>
+    <div class="row" style="border-top:none;padding-top:0">
+      <input type="search" id="newProfile" placeholder="新档位名，例如 coding / chat" style="min-width:200px" />
+      <button id="btnCreateProfile">新建档位</button>
+      <span class="hint">新档位是一份空白工具名单：勾完点「保存这份工具名单」</span>
     </div>
     <div id="profileTools" class="grid"><span class="empty">选一个档位</span></div>
   </section>
@@ -231,6 +240,7 @@ function renderAgents() {
       '<span class="hint">' + esc(a.provider || '?') + '</span>' +
       '<span class="grow"></span>' +
       '<span class="mono">' + a.tools + ' 工具' + (a.restricted ? ' · 已裁 ' + a.kept : ' · 未裁') + '</span>' +
+      '<span class="hint">工具档位</span>' +
       '<select data-agent="' + esc(a.id) + '">' + opts + '</select>' +
       '<button data-auto="' + esc(a.id) + '"' + (a.explicit ? '' : ' disabled') + '>跟随 provider</button>' +
       '</div>'
@@ -249,20 +259,36 @@ function renderProfileEditor() {
   const pick = $('profilePick')
   const keepPick = pick.value
   pick.innerHTML = profiles.map((p) => '<option value="' + esc(p.id) + '">' + esc(p.id) + '（' + p.count + '）</option>').join('')
+  // 默认落在第一个「能编辑」的档位上，别一上来就停在 full（それは表示が説明文だけになる）
+  const editable = profiles.filter((p) => p.id !== 'full')
   if (keepPick && profiles.some((p) => p.id === keepPick)) pick.value = keepPick
+  else if (editable.length > 0) pick.value = (editable.find((p) => p.id === 'local') || editable[0]).id
   const id = pick.value
   const def = profiles.find((p) => p.id === id)
+  const del = $('btnDeleteProfile')
+  if (del) {
+    del.disabled = !(def && def.deletable)
+    del.title = def && def.deletable ? '删除这个档位' : '内置档位不能删'
+  }
+  const used = ((last && last.agents) || []).filter((a) => a.profile === id).length
+  if ($('profileSummary')) {
+    $('profileSummary').textContent = def === undefined
+      ? ''
+      : id === 'full'
+        ? '不限工具 · ' + used + ' 个会话在用'
+        : def.count + ' 个工具 · ' + used + ' 个会话在用'
+  }
   if (!def) {
     $('profileTools').innerHTML = '<span class="empty">选一个档位</span>'
     return
   }
   if (id === 'full') {
-    $('profileTools').innerHTML = '<span class="empty">full 档 = 不装限制，全部工具可见，不需要勾选</span>'
+    $('profileTools').innerHTML = '<span class="empty">full 档不做任何裁剪，全部工具都可见；要裁剪工具请选 local，或用下面「新建档位」自己建一份名单</span>'
     return
   }
   const set = new Set(def.tools || [])
   $('profileTools').innerHTML = names.length === 0
-    ? '<span class="empty">还没有会话，看不到工具名</span>'
+    ? '<span class="empty">还没有会话，看不到工具名；先随便开一个会话再来勾</span>'
     : names.map((n) =>
         '<label class="tool' + (set.has(n) ? '' : ' cut') + '"><input type="checkbox" data-pname="' + esc(n) + '"' +
         (set.has(n) ? ' checked' : '') + ' /><span class="mono">' + esc(n) + '</span></label>').join('')
@@ -384,7 +410,22 @@ $('btnSaveProvider').onclick = () => act('设置本地 provider', () => call('se
 $('btnSaveProfile').onclick = () => {
   const id = $('profilePick').value
   const tools = [...$('profileTools').querySelectorAll('input[data-pname]')].filter((b) => b.checked).map((b) => b.dataset.pname)
-  act('保存档位 ' + id, () => call('setProfileTools', { profile: id, tools }))
+  act('保存工具名单 ' + id, () => call('setProfileTools', { profile: id, tools }))
+}
+$('btnCreateProfile').onclick = () => {
+  const id = $('newProfile').value.trim()
+  if (id.length === 0) return toast('先填个档位名', 'bad')
+  act('新建档位 ' + id, async () => {
+    const r = await call('createProfile', { id })
+    $('newProfile').value = ''
+    if (r && r.id) $('profilePick').value = r.id
+    return r
+  })
+}
+$('btnDeleteProfile').onclick = () => {
+  const id = $('profilePick').value
+  if (!id || !confirm('删除档位「' + id + '」？引用它的会话会回到「跟随 provider」。')) return
+  act('删除档位 ' + id, () => call('deleteProfile', { id }))
 }
 $('profilePick').onchange = renderProfileEditor
 $('plugsearch').oninput = () => { page = 1; renderPlugins() }

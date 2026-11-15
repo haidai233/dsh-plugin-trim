@@ -71,8 +71,8 @@ open-panel.cmd check    # 只打印地址
 
 面板内容：
 
-- **会话**：每行一个会话（本地/云端、provider、档位下拉、工具数、是否已裁），可以给单条会话换档或改回「跟随 provider」
-- **档位定义**：选一个档位（`local` / `custom`），逐工具勾选白名单并保存；`full` 固定不限
+- **会话**：每行一个会话（本地/云端、provider、工具档位下拉、工具数、是否已裁），可以给单条会话换档或改回「跟随 provider」
+- **档位定义 · 工具名单**：一个档位就是一份工具白名单。内置 `full`（不裁剪）和 `local`（14 项），可以**随便新建**（如 `coding` / `chat`），逐个工具勾选后保存；面板新建的档位也能删，引用它的会话会自动回到「跟随 provider」
 - **本地 provider**：指定哪个 provider 算本地
 - **插件（profile 级）**：全部可管理插件，带搜索/分页/「只看已停用」，核心组件停用前弹确认
 
@@ -100,7 +100,7 @@ open-panel.cmd check    # 只打印地址
 | `routes` | `[]` | 非空时只认这些 provider |
 | `localEntries` | 示例 3 条 | 插件层要关掉的 entryId |
 | `defaultProfileFor` | `{local: local, cloud: full}` | 本地/云端各套哪个档 |
-| `profiles.local` | 14 项 | `local` 档白名单 |
+| `profiles.<名字>` | `local` 14 项 | 任意键名都是一个档位；面板里新建的档位存在 `~/.dsh/plugin-trim-state.json`，不写回配置 |
 
 本地 provider 判定：`localProvider` 写死 / `routes` 命中 / baseURL 落在回环或私有网段 / id 带 local、ollama、llama、vllm、sglang 等标记。
 
