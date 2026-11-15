@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>本地模型裁剪 · dsh-plugin-trim</title>
+<title>会话裁剪 · dsh-plugin-trim</title>
 <style>
   :root {
     color-scheme: light dark;
@@ -43,7 +43,7 @@
   * { box-sizing: border-box; }
   body { margin: 0; padding: 28px 20px 56px; background: var(--bg); color: var(--fg);
     font: 14px/1.65 -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif; -webkit-font-smoothing: antialiased; }
-  .wrap { max-width: 920px; margin: 0 auto; }
+  .wrap { max-width: 940px; margin: 0 auto; }
   header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
   h1 { font-size: 19px; letter-spacing: .2px; margin: 0; font-weight: 650; }
   .version { font-size: 12px; color: var(--fg-mute); }
@@ -52,7 +52,7 @@
   .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
   h2 { font-size: 14px; margin: 0; font-weight: 620; }
   .hint { font-size: 12px; color: var(--fg-mute); }
-  .row { display: flex; align-items: center; gap: 10px; padding: 7px 0; flex-wrap: wrap; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; flex-wrap: wrap; }
   .row + .row { border-top: 1px solid var(--line); }
   .k { flex: 0 0 96px; color: var(--fg-soft); font-size: 13px; }
   .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
@@ -68,111 +68,88 @@
   button:disabled { opacity: .5; cursor: default; }
   button.primary { border-color: color-mix(in oklab, var(--accent) 50%, transparent); background: var(--accent-soft); color: var(--accent); }
   button.danger { border-color: color-mix(in oklab, var(--danger) 45%, transparent); background: var(--danger-soft); color: var(--danger); }
-  input[type="search"] { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
-    border: 1px solid var(--line-strong); background: var(--card-2); color: var(--fg); min-width: 220px; }
-  select { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
-    border: 1px solid var(--line-strong); background: var(--card-2); color: var(--fg); min-width: 220px; }
-  .pager { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-  .pager .page { font-size: 12.5px; color: var(--fg-soft); }
-  input[type="search"]::placeholder { color: var(--fg-mute); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 2px 14px; }
-  label.tool { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 5px 8px; border-radius: 7px; cursor: pointer; }
+  select, input[type="search"] { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
+    border: 1px solid var(--line-strong); background: var(--card-2); color: var(--fg); }
+  select { min-width: 130px; }
+  input[type="search"] { min-width: 220px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 2px 12px; }
+  label.tool { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 4px 8px; border-radius: 7px; cursor: pointer; }
   label.tool:hover { background: var(--card-2); }
   label.tool input { accent-color: var(--accent); width: 14px; height: 14px; }
   label.tool.cut span { color: var(--fg-mute); text-decoration: line-through; }
-  .list .row { padding: 6px 0; }
-  .list .row.changed { background: var(--warn-soft); border-radius: 6px; padding-left: 8px; padding-right: 8px; }
+  .list .row { padding: 7px 0; }
+  .list .row.hot { background: var(--warn-soft); border-radius: 6px; padding-left: 8px; padding-right: 8px; }
   .empty { color: var(--fg-mute); font-size: 13px; padding: 6px 0; }
-  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: min(760px, calc(100vw - 40px));
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: min(780px, calc(100vw - 40px));
     background: var(--card); border: 1px solid var(--line-strong); border-radius: 10px; padding: 9px 14px; font-size: 13px;
     box-shadow: var(--shadow); display: none; }
   #toast.show { display: block; }
   #toast.bad { border-color: color-mix(in oklab, var(--danger) 55%, transparent); color: var(--danger); }
   #toast.good { border-color: color-mix(in oklab, var(--accent) 45%, transparent); color: var(--accent); }
   .theme-btn { font-size: 12px; padding: 3px 9px; }
-  .scroll { max-height: 460px; overflow: auto; margin-top: 4px; }
+  .scroll { max-height: 420px; overflow: auto; margin-top: 4px; }
   .scroll::-webkit-scrollbar { width: 8px; }
   .scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
+  .pager { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .page { font-size: 12.5px; color: var(--fg-soft); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>本地模型裁剪</h1>
-    <span class="version">dsh-plugin-trim 0.1.0</span>
+    <h1>会话裁剪</h1>
+    <span class="version">dsh-plugin-trim 0.2.0</span>
     <span class="grow"></span>
     <button class="theme-btn" id="theme">主题：跟随系统</button>
   </header>
 
   <section class="card">
-    <div class="row">
-      <span class="k">当前 provider</span>
-      <span class="mono" id="provider">—</span>
-      <span class="badge" id="localbadge">—</span>
+    <div class="card-head">
+      <h2>会话</h2>
+      <span class="hint">每个会话自己一个档位，互不影响</span>
       <span class="grow"></span>
-      <span class="badge off" id="autobadge">自动跟随 —</span>
+      <button id="btnApplyAll">全部按档位重装</button>
+      <button id="btnRestoreAll">全部放开</button>
     </div>
-    <div class="row">
-      <span class="k">作用范围</span>
-      <label class="hint" style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="onlyLocal" checked /> 只对本地会话生效（云端会话保持原样）
-      </label>
-    </div>
-    <div class="row">
-      <span class="k">工具</span>
-      <span class="mono" id="toolcount">—</span>
-      <span class="grow"></span>
-      <button class="danger" id="btnApplyTools">只留白名单</button>
-      <button class="primary" id="btnRestoreTools">放开全部</button>
-    </div>
-    <div class="row">
-      <span class="k">插件</span>
-      <span class="mono" id="plugcount">—</span>
-      <span class="grow"></span>
-      <button class="danger" id="btnApply">本地模式</button>
-      <button class="primary" id="btnRestore">还原</button>
-      <button id="btnRefresh">刷新</button>
-    </div>
+    <div id="agents" class="list"><span class="empty">读取中…</span></div>
   </section>
 
   <section class="card">
     <div class="card-head">
-      <h2>本地模型</h2>
-      <span class="hint">指定哪个 provider 算「本地」——决定自动裁/还原与徽章</span>
-    </div>
-    <div class="row" style="border-top:none;padding-top:0">
-      <span class="k">算作本地</span>
-      <select id="provselect"></select>
-      <span class="hint" id="provhint"></span>
+      <h2>档位定义</h2>
+      <span class="hint">勾上=保留 · 取消=裁掉 · full 固定不限</span>
       <span class="grow"></span>
+      <select id="profilePick"></select>
+      <button class="primary" id="btnSaveProfile">保存这份档位</button>
+    </div>
+    <div id="profileTools" class="grid"><span class="empty">选一个档位</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>本地 provider</h2>
+      <span class="hint">决定哪些会话算「本地」→ 自动套 local 档</span>
+      <span class="grow"></span>
+      <select id="provselect"></select>
       <button class="primary" id="btnSaveProvider">保存</button>
     </div>
-    <div class="row">
-      <span class="k">各会话</span>
-      <span class="hint" id="agents">—</span>
+    <div class="row" style="border-top:none;padding-top:0">
+      <span class="hint" id="provhint">—</span>
     </div>
   </section>
 
   <section class="card">
     <div class="card-head">
-      <h2>工具层</h2>
-      <span class="hint">勾上=保留 · 取消=裁掉</span>
-    </div>
-    <div id="tools" class="grid"><span class="empty">读取中…</span></div>
-  </section>
-
-  <section class="card">
-    <div class="card-head">
-      <h2>插件层</h2>
-      <span class="hint">全部可管理插件 · 直接开/关</span>
+      <h2>插件（profile 级）</h2>
+      <span class="hint">物理启停，影响这个 profile 下的全部会话</span>
+      <span class="grow"></span>
+      <button class="danger" id="btnApplyPlugins">关掉清单</button>
+      <button class="primary" id="btnRestorePlugins">开回清单</button>
     </div>
     <div class="row" style="border-top:none;padding-top:0">
       <input type="search" id="plugsearch" placeholder="搜索 entryId 或包名…" />
       <label class="hint" style="display:flex;align-items:center;gap:6px;cursor:pointer">
         <input type="checkbox" id="onlybad" /> 只看已停用
-      </label>
-      <label class="hint" style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="onlylist" /> 只看清单
       </label>
       <span class="grow"></span>
       <span class="hint" id="plugfiltercount"></span>
@@ -188,14 +165,6 @@
   </section>
 
   <section class="card">
-    <div class="card-head">
-      <h2>本地模式清单</h2>
-      <span class="hint">「本地模式」按钮只处理这几条</span>
-    </div>
-    <div id="plugins" class="list"><span class="empty">读取中…</span></div>
-  </section>
-
-  <section class="card">
     <div class="card-head"><h2>最近动作</h2></div>
     <div id="action" class="empty">—</div>
   </section>
@@ -208,11 +177,10 @@ const $ = (id) => document.getElementById(id)
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const CORE = /^@deepseek-ai\/dsh-(base|llm|session|agent|tools|subprocess|storage|webserver|api-|host-|client-|typert|settings|credentials|sandbox|approval|permission|shell-env|jobs)/
 let busy = false
-let lastStatus = null
+let last = null
 let page = 1
 const PAGE = 20
 
-/* ---- 主题 ---- */
 const THEMES = ['auto', 'light', 'dark']
 const THEME_LABEL = { auto: '跟随系统', light: '浅色', dark: '深色' }
 let theme = localStorage.getItem('plugin-trim-theme') || 'auto'
@@ -230,9 +198,7 @@ applyTheme()
 
 async function call(name, body) {
   const r = await fetch(BASE + '/' + name, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body || {}),
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}),
   })
   const p = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(p.error || 'HTTP ' + r.status)
@@ -249,42 +215,88 @@ function toast(text, tone) {
   toastTimer = setTimeout(() => { el.className = '' }, 6000)
 }
 
-function describe(r) {
-  const parts = []
-  if (r && r.plugins && Array.isArray(r.plugins.done)) parts.push('插件生效 ' + r.plugins.done.length)
-  if (r && r.plugins && r.plugins.skipped && r.plugins.skipped.length) {
-    const hint = (r.plugins.skipped.find((x) => x.hint) || {}).hint
-    parts.push('插件跳过 ' + r.plugins.skipped.length + (hint ? '（' + hint + '）' : ''))
+function renderAgents() {
+  const agents = (last && last.agents) || []
+  const profiles = (last && last.profiles) || []
+  if (agents.length === 0) {
+    $('agents').innerHTML = '<span class="empty">没有活动会话</span>'
+    return
   }
-  const rows = (r && (r.rows || r.tools)) || null
-  if (Array.isArray(rows)) {
-    const ok = rows.filter((x) => x.ok === true || x.off === true).length
-    if (rows.length) parts.push('工具 ' + ok + ' 个 agent')
-    const failed = rows.filter((x) => x.ok === false && x.why)
-    if (failed.length) parts.push('失败 ' + failed.length + '（' + failed[0].why + '）')
-  }
-  return parts.join(' · ') || '完成'
+  $('agents').innerHTML = agents.map((a) => {
+    const opts = profiles.map((p) =>
+      '<option value="' + esc(p.id) + '"' + (p.id === a.profile ? ' selected' : '') + '>' + esc(p.id) + '（' + p.count + '）</option>').join('')
+    return '<div class="row">' +
+      '<span class="badge ' + (a.local ? 'warn' : 'off') + '">' + (a.local ? '本地' : '云端') + '</span>' +
+      '<span class="mono" title="' + esc(a.id) + '">' + esc(a.id.slice(0, 18)) + '…</span>' +
+      '<span class="hint">' + esc(a.provider || '?') + '</span>' +
+      '<span class="grow"></span>' +
+      '<span class="mono">' + a.tools + ' 工具' + (a.restricted ? ' · 已裁 ' + a.kept : ' · 未裁') + '</span>' +
+      '<select data-agent="' + esc(a.id) + '">' + opts + '</select>' +
+      '<button data-auto="' + esc(a.id) + '"' + (a.explicit ? '' : ' disabled') + '>跟随 provider</button>' +
+      '</div>'
+  }).join('')
+  $('agents').querySelectorAll('select[data-agent]').forEach((sel) => {
+    sel.onchange = () => act('换档 ' + sel.dataset.agent.slice(0, 8), () => call('setProfile', { agent: sel.dataset.agent, profile: sel.value }))
+  })
+  $('agents').querySelectorAll('button[data-auto]').forEach((btn) => {
+    btn.onclick = () => act('回到自动套档', () => call('autoProfile', { agent: btn.dataset.auto }))
+  })
 }
 
-function renderAllPlugins() {
-  if (lastStatus === null) return
+function renderProfileEditor() {
+  const profiles = (last && last.profiles) || []
+  const names = (last && last.visibleNames) || []
+  const pick = $('profilePick')
+  const keepPick = pick.value
+  pick.innerHTML = profiles.map((p) => '<option value="' + esc(p.id) + '">' + esc(p.id) + '（' + p.count + '）</option>').join('')
+  if (keepPick && profiles.some((p) => p.id === keepPick)) pick.value = keepPick
+  const id = pick.value
+  const def = profiles.find((p) => p.id === id)
+  if (!def) {
+    $('profileTools').innerHTML = '<span class="empty">选一个档位</span>'
+    return
+  }
+  if (id === 'full') {
+    $('profileTools').innerHTML = '<span class="empty">full 档 = 不装限制，全部工具可见，不需要勾选</span>'
+    return
+  }
+  const set = new Set(def.tools || [])
+  $('profileTools').innerHTML = names.length === 0
+    ? '<span class="empty">还没有会话，看不到工具名</span>'
+    : names.map((n) =>
+        '<label class="tool' + (set.has(n) ? '' : ' cut') + '"><input type="checkbox" data-pname="' + esc(n) + '"' +
+        (set.has(n) ? ' checked' : '') + ' /><span class="mono">' + esc(n) + '</span></label>').join('')
+  $('profileTools').querySelectorAll('input[data-pname]').forEach((box) => {
+    box.onchange = () => box.closest('label').classList.toggle('cut', !box.checked)
+  })
+}
+
+function renderProvider() {
+  const providers = (last && last.providers) || []
+  const chosen = (last && last.localProvider) || ''
+  const sel = $('provselect')
+  sel.innerHTML = '<option value="">自动识别（按 baseURL / 名字）</option>' + providers.map((p) =>
+    '<option value="' + esc(p.id) + '">' + esc(p.id) + (p.local ? '（本地）' : '（云端）') + (p.baseURL ? ' — ' + esc(p.baseURL) : '') + '</option>').join('')
+  sel.value = chosen && providers.some((p) => p.id === chosen) ? chosen : ''
+  $('provhint').textContent = chosen ? '已锁定：' + chosen : '当前：自动识别'
+}
+
+function renderPlugins() {
+  if (!last) return
   const q = $('plugsearch').value.trim().toLowerCase()
   const onlyBad = $('onlybad').checked
-  const onlyList = $('onlylist').checked
-  let rows = (lastStatus.candidates || []).slice()
+  let rows = (last.candidates || []).slice()
   if (q) rows = rows.filter((r) => (r.entryId + ' ' + r.moduleName + ' ' + r.short).toLowerCase().includes(q))
   if (onlyBad) rows = rows.filter((r) => !r.enabled)
-  if (onlyList) rows = rows.filter((r) => r.inList)
   rows.sort((a, b) => {
     if (a.inList !== b.inList) return a.inList ? -1 : 1
     if (a.enabled !== b.enabled) return a.enabled ? -1 : 1
     return (a.short || a.entryId).localeCompare(b.short || b.entryId)
   })
-  $('plugfiltercount').textContent = '匹配 ' + rows.length + ' / ' + (lastStatus.candidates || []).length
   const pages = Math.max(1, Math.ceil(rows.length / PAGE))
   if (page > pages) page = pages
-  if (page < 1) page = 1
   const slice = rows.slice((page - 1) * PAGE, page * PAGE)
+  $('plugfiltercount').textContent = '匹配 ' + rows.length
   $('pgInfo').textContent = '第 ' + page + ' / ' + pages + ' 页'
   $('pgPrev').disabled = page <= 1
   $('pgNext').disabled = page >= pages
@@ -294,7 +306,7 @@ function renderAllPlugins() {
   }
   $('allplugins').innerHTML = slice.map((r) => {
     const core = CORE.test(r.moduleName)
-    return '<div class="row' + (r.inList ? ' changed' : '') + '">' +
+    return '<div class="row' + (r.inList ? ' hot' : '') + '">' +
       '<span class="badge ' + (r.enabled ? 'ok' : 'off') + '">' + (r.enabled ? '开' : '关') + '</span>' +
       '<span class="mono">' + esc(r.short || r.entryId) + '</span>' +
       '<span class="hint">' + esc(r.moduleName) + '</span>' +
@@ -305,79 +317,42 @@ function renderAllPlugins() {
       (r.enabled ? '停用' : '启用') + '</button></div>'
   }).join('')
   $('allplugins').querySelectorAll('button[data-entry]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const wantEnable = btn.dataset.to === '1'
-      if (btn.dataset.core === '1' && !wantEnable) {
-        if (!confirm('这是 DSH 核心组件（' + btn.dataset.entry + '）。停掉它可能让界面或会话直接不可用，确定？')) return
-      }
-      act((wantEnable ? '启用 ' : '停用 ') + btn.dataset.entry,
-        () => call('set', { entryId: btn.dataset.entry, enabled: wantEnable }))
-    })
+    btn.onclick = () => {
+      const want = btn.dataset.to === '1'
+      if (btn.dataset.core === '1' && !want && !confirm('这是 DSH 核心组件。停掉可能让界面不可用，确定？')) return
+      act((want ? '启用 ' : '停用 ') + btn.dataset.entry, () => call('set', { entryId: btn.dataset.entry, enabled: want }))
+    }
   })
 }
 
 async function refresh() {
-  const [s, t] = await Promise.all([call('status'), call('tools')])
-  lastStatus = s
-  $('provider').textContent = s.lastProvider || '（还没看到会话）'
-  const lb = $('localbadge')
-  lb.textContent = s.providerIsLocal ? '本地' : '云端'
-  lb.className = 'badge ' + (s.providerIsLocal ? 'warn' : 'ok')
-  $('autobadge').textContent = '自动跟随 ' + (s.auto ? '开' : '关')
-
-  // provider 选择
-  const providers = s.providers || []
-  const chosen = s.localProvider || ''
-  const sel = $('provselect')
-  const keepSel = sel.value
-  sel.innerHTML = '<option value="">自动识别（按 baseURL / 名字）</option>' +
-    providers.map((p) =>
-      '<option value="' + esc(p.id) + '">' + esc(p.id) + (p.displayName ? ' · ' + esc(p.displayName) : '') +
-      (p.local ? '（本地）' : '（云端）') + ' — ' + esc(p.baseURL) + '</option>').join('')
-  sel.value = chosen && providers.some((p) => p.id === chosen) ? chosen : ''
-  if (!chosen && keepSel === '') sel.value = ''
-  $('provhint').textContent = chosen ? '已锁定：' + chosen : '当前：自动识别'
-  const ags = (s.agents || []).map((a) => (a.provider || '?') + ' · ' + a.tools + ' 工具').join('；')
-  $('agents').textContent = ags || '—'
-
-  const agent = (t.agents || [])[0]
-  const visible = (agent && agent.visible) || []
-  $('toolcount').textContent = visible.length + ' 个可见 · ' + (agent && agent.restricted ? '已装限制' : '未装限制')
-  $('plugcount').textContent = '启用 ' + s.counts.enabled + ' / 停用 ' + s.counts.disabled + ' / 共 ' + s.counts.total
-
-  const entries = s.localEntries || []
-  $('plugins').innerHTML = entries.length === 0
-    ? '<span class="empty">清单是空的（cordis.patch.yml 的 localEntries）</span>'
-    : entries.map((r) =>
-        '<div class="row"><span class="badge ' + (r.enabled ? 'warn' : 'ok') + '">' + (r.enabled ? '开' : '关') + '</span>' +
-        '<span class="mono">' + esc(r.entryId) + '</span>' +
-        (r.found ? '' : '<span class="badge core">已脱离组合</span>') +
-        '<span class="grow"></span>' +
-        '<button data-entry="' + esc(r.entryId) + '" data-to="' + (r.enabled ? '0' : '1') + '">' +
-        (r.enabled ? '停用' : '启用') + '</button></div>').join('')
-  $('plugins').querySelectorAll('button[data-entry]').forEach((btn) => {
-    btn.addEventListener('click', () => act('插件 ' + btn.dataset.entry,
-      () => call('set', { entryId: btn.dataset.entry, enabled: btn.dataset.to === '1' })))
-  })
-
-  const keep = new Set(t.keep || [])
-  $('tools').innerHTML = visible.length === 0
-    ? '<span class="empty">这个 agent 现在看不到工具</span>'
-    : visible.map((name) =>
-        '<label class="tool' + (keep.has(name) ? '' : ' cut') + '"><input type="checkbox" data-tool="' + esc(name) + '"' +
-        (keep.has(name) ? ' checked' : '') + ' /><span class="mono">' + esc(name) + '</span></label>').join('')
-  $('tools').querySelectorAll('input[data-tool]').forEach((box) => {
-    box.addEventListener('change', () => {
-      box.closest('label').classList.toggle('cut', !box.checked)
-      act('工具 ' + box.dataset.tool, () => call('setTool', { tool: box.dataset.tool, enabled: box.checked }))
-    })
-  })
-
+  const s = await call('status')
+  last = s
+  renderAgents()
+  renderProfileEditor()
+  renderProvider()
+  renderPlugins()
   const a = s.lastAction || {}
   $('action').textContent = (a.text || '—') + (a.at ? ' · ' + new Date(a.at).toLocaleString() : '')
   $('action').className = a.text ? '' : 'empty'
+}
 
-  renderAllPlugins()
+function describe(r) {
+  const parts = []
+  if (r && r.plugins) {
+    if (Array.isArray(r.plugins.done)) parts.push('插件 ' + r.plugins.done.length)
+    if (Array.isArray(r.plugins.skipped) && r.plugins.skipped.length) parts.push('跳过 ' + r.plugins.skipped.length)
+  }
+  const rows = (r && (r.rows || [])) || []
+  if (Array.isArray(rows) && rows.length) {
+    const ok = rows.filter((x) => x.ok === true || x.off === true).length
+    parts.push('会话 ' + ok + ' 个')
+    const failed = rows.filter((x) => x.ok === false && x.why)
+    if (failed.length) parts.push('失败 ' + failed.length + '（' + failed[0].why + '）')
+  }
+  if (r && r.result && r.result.ok === false) parts.push('失败：' + (r.result.why || ''))
+  if (r && r.result && r.result.profile) parts.push('档位 ' + r.result.profile)
+  return parts.join(' · ') || '完成'
 }
 
 async function act(label, fn) {
@@ -393,24 +368,30 @@ async function act(label, fn) {
     await refresh().catch(() => {})
   } finally {
     busy = false
-    document.querySelectorAll('button').forEach((b) => (b.disabled = false))
+    document.querySelectorAll('button').forEach((b) => {
+      if (b.id === 'pgPrev' || b.id === 'pgNext') return
+      b.disabled = false
+    })
+    renderPlugins()
   }
 }
 
-$('btnApplyTools').onclick = () => act('只留白名单', () => call('toolsApply', { onlyLocal: $('onlyLocal').checked }))
-$('btnRestoreTools').onclick = () => act('放开全部', () => call('toolsRestore', { onlyLocal: $('onlyLocal').checked }))
-$('btnApply').onclick = () => act('本地模式', () => call('apply', { onlyLocal: $('onlyLocal').checked }))
-$('btnRestore').onclick = () => act('还原', () => call('restore', { onlyLocal: $('onlyLocal').checked }))
-$('btnRefresh').onclick = () => act('刷新', async () => ({}))
-$('provselect').onchange = () => {
-  $('provhint').textContent = '未保存'
-}
+$('btnApplyAll').onclick = () => act('全部按档位重装', () => call('applyAll'))
+$('btnRestoreAll').onclick = () => act('全部放开', () => call('restoreAll'))
+$('btnApplyPlugins').onclick = () => act('关掉插件清单', () => call('applyPlugins'))
+$('btnRestorePlugins').onclick = () => act('开回插件清单', () => call('restorePlugins'))
 $('btnSaveProvider').onclick = () => act('设置本地 provider', () => call('setProvider', { provider: $('provselect').value }))
-$('pgPrev').onclick = () => { page -= 1; renderAllPlugins() }
-$('pgNext').onclick = () => { page += 1; renderAllPlugins() }
-$('plugsearch').oninput = () => { page = 1; renderAllPlugins() }
-$('onlybad').onchange = () => { page = 1; renderAllPlugins() }
-$('onlylist').onchange = () => { page = 1; renderAllPlugins() }
+$('btnSaveProfile').onclick = () => {
+  const id = $('profilePick').value
+  const tools = [...$('profileTools').querySelectorAll('input[data-pname]')].filter((b) => b.checked).map((b) => b.dataset.pname)
+  act('保存档位 ' + id, () => call('setProfileTools', { profile: id, tools }))
+}
+$('profilePick').onchange = renderProfileEditor
+$('plugsearch').oninput = () => { page = 1; renderPlugins() }
+$('onlybad').onchange = () => { page = 1; renderPlugins() }
+$('pgPrev').onclick = () => { page -= 1; renderPlugins() }
+$('pgNext').onclick = () => { page += 1; renderPlugins() }
+$('provselect').onchange = () => { $('provhint').textContent = '未保存' }
 
 refresh().catch((e) => toast('读取失败：' + String(e.message || e), 'bad'))
 </script>

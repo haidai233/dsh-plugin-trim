@@ -1,7 +1,7 @@
 {
   "name": "dsh-plugin-trim",
-  "version": "0.1.0",
-  "description": "Per-provider plugin and tool trimming for DeepSeek Harness: when a local model is in use, switch off token-hungry plugins and restrict the tool surface, with a self-hosted control panel.",
+  "version": "0.2.0",
+  "description": "Per-session tool trimming for DeepSeek Harness: each session carries its own tool profile, the provider only picks the default; plus profile-level plugin switching and a self-hosted panel.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
