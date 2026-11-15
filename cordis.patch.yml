@@ -1,0 +1,37 @@
+# dsh-plugin-trim — bundle manifest entry.
+#
+# config 说明：
+#   localEntries  用本地模型时要整组关掉的插件 entryId
+#   keep          裁工具时要保留的工具名（白名单），其余全裁
+#   auto          true = 切到本地 provider 自动裁、切回云端自动还原
+#   routes        非空时只认这些 provider；留空则按 baseURL / 名字自动识别
+- insert:
+    - id: plugin-trim
+      name: "dsh-plugin-trim"
+      inject: [pluginManager]
+      config:
+        enabled: true
+        auto: false
+        # true = 每个会话按自己的 provider 实时决定裁不裁：切到本地自动裁、
+        # 切回云端自动放开，且只影响那一个会话，不会把云端会话一起裁掉。
+        followTools: true
+        routes: []
+        localEntries:
+          - include:artex-orchestration
+          - include:drawai
+          - include:dsh-blender-plugin
+        keep:
+          - pwsh
+          - read
+          - write
+          - edit
+          - glob
+          - grep
+          - working_directory
+          - job_output
+          - job_list
+          - job_kill
+          - todo_write
+          - present
+          - read_image
+          - ask_user_question

@@ -1,0 +1,55 @@
+{
+  "name": "dsh-plugin-trim",
+  "version": "0.1.0",
+  "description": "Per-provider plugin and tool trimming for DeepSeek Harness: when a local model is in use, switch off token-hungry plugins and restrict the tool surface, with a self-hosted control panel.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    },
+    "engines": {
+      "dsh": ">=0.1.7-rc.1"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haidai233/dsh-plugin-trim.git"
+  },
+  "homepage": "https://github.com/haidai233/dsh-plugin-trim#readme",
+  "bugs": {
+    "url": "https://github.com/haidai233/dsh-plugin-trim/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "local-llm",
+    "local-model",
+    "context-window",
+    "token-saver",
+    "tool-trim"
+  ],
+  "license": "MIT"
+}
