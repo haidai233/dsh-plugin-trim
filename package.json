@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-trim",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Per-session tool trimming for DeepSeek Harness: each session carries its own tool profile, the provider only picks the default; plus profile-level plugin switching and a self-hosted panel.",
   "type": "module",
   "main": "lib/index.js",
@@ -14,7 +14,9 @@
     "client.js",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "open-panel.cmd",
+    "open-panel.ps1"
   ],
   "dsh": {
     "bundle": {
