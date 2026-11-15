@@ -172,7 +172,7 @@
 <div id="toast"></div>
 
 <script>
-const BASE = location.pathname.replace(/\/panel$/, '').replace(/\/index\.html$/, '').replace(/\/+$/, '')
+const API = '/api/plugin-trim'
 const $ = (id) => document.getElementById(id)
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const CORE = /^@deepseek-ai\/dsh-(base|llm|session|agent|tools|subprocess|storage|webserver|api-|host-|client-|typert|settings|credentials|sandbox|approval|permission|shell-env|jobs)/
@@ -197,7 +197,7 @@ $('theme').onclick = () => {
 applyTheme()
 
 async function call(name, body) {
-  const r = await fetch(BASE + '/' + name, {
+  const r = await fetch(API + '/' + name, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}),
   })
   const p = await r.json().catch(() => ({}))
