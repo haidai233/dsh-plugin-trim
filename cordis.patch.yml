@@ -18,6 +18,8 @@
         enabled: true
         auto: false
         followTools: true
+        # 固定端口面板（http://127.0.0.1:12256/）；被占则往后顺延
+        panelPort: 12256
         routes: []
         localEntries:
           - include:artex-orchestration

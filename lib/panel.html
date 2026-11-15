@@ -172,7 +172,7 @@
 <div id="toast"></div>
 
 <script>
-const BASE = location.pathname.replace(/\/panel$/, '')
+const BASE = location.pathname.replace(/\/panel$/, '').replace(/\/index\.html$/, '').replace(/\/+$/, '')
 const $ = (id) => document.getElementById(id)
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const CORE = /^@deepseek-ai\/dsh-(base|llm|session|agent|tools|subprocess|storage|webserver|api-|host-|client-|typert|settings|credentials|sandbox|approval|permission|shell-env|jobs)/

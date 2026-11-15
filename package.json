@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-trim",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Per-session tool trimming for DeepSeek Harness: each session carries its own tool profile, the provider only picks the default; plus profile-level plugin switching and a self-hosted panel.",
   "type": "module",
   "main": "lib/index.js",

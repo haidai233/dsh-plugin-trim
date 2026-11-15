@@ -54,14 +54,18 @@ dsh plugin --profile desktop add D:\path\to\dsh-plugin-trim
 
 ## 面板
 
-```
-http://127.0.0.1:<DSH 当前端口>/api/plugin-trim/panel
-```
-
-DSH 端口每次启动都变，仓库带一个 Windows 启动器：
+**固定地址，装完就能开：**
 
 ```
-open-panel.cmd          # 自动找端口并打开面板
+http://127.0.0.1:12256/
+```
+
+插件自己起一个只监听回环的 HTTP 服务（默认 12256，被占则自动 +1 顺延，可用 `panelPort` 改）。**跟 DSH 的端口无关**，DSH 重启多少次都不变。
+
+Windows 上还有个启动器（包里自带）：
+
+```
+open-panel.cmd          # 打开面板；12256 不通时回退扫 DSH 端口
 open-panel.cmd check    # 只打印地址
 ```
 
@@ -102,11 +106,15 @@ open-panel.cmd check    # 只打印地址
 
 ## HTTP 接口
 
-`GET  /api/plugin-trim/panel`
+固定端口面板（`127.0.0.1:12256`）：
 
-`POST /api/plugin-trim/{status,setProfile,autoProfile,setProfileTools,setProvider,applyAll,restoreAll,set,applyPlugins,restorePlugins}`
+| 方法 | 路径 |
+|---|---|
+| GET | `/` 面板页 |
+| GET | `/health` |
+| POST | `/api/plugin-trim/{status,setProfile,autoProfile,setProfileTools,setProvider,applyAll,restoreAll,set,applyPlugins,restorePlugins}` |
 
-同源校验（Origin 与 Host 不同源即 403）。
+同一套处理函数还会注册到 DSH 自带 webServer 上（`/api/plugin-trim/...`，带同源校验），两个入口等价。
 
 ## 已知限制
 
